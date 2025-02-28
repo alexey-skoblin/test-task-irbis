@@ -22,12 +22,6 @@ public class WebSource {
 
     private String url;
 
-    @CreatedBy
-    private User creator;
-
-    @LastModifiedBy
-    private User modifier;
-
     @CreatedDate
     private LocalDateTime createdAt;
 
