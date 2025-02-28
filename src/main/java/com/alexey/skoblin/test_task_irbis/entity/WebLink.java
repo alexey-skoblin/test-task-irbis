@@ -3,37 +3,34 @@ package com.alexey.skoblin.test_task_irbis.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.proxy.HibernateProxy;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Objects;
+import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
-public class WebSource {
+@Table(indexes = @Index(columnList = "url"))
+public class WebLink {
 
-    @Id
-    private UUID id;
+
 
     @Column(nullable = false, unique = true)
-    private String name;
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    private WebLink link;
-
-    @OneToMany(mappedBy = "source", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<WebRubric> rubrics = new HashSet<>();
+    private String url;
 
     @CreatedDate
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     private LocalDateTime modifiedAt;
+
+    @Id
+    private UUID id;
 
     @Override
     public final boolean equals(Object o) {
@@ -42,8 +39,8 @@ public class WebSource {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        WebSource webSource = (WebSource) o;
-        return getId() != null && Objects.equals(getId(), webSource.getId());
+        WebLink webLink = (WebLink) o;
+        return getId() != null && Objects.equals(getId(), webLink.getId());
     }
 
     @Override

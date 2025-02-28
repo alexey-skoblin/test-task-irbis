@@ -4,30 +4,36 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
-public class WebSource {
+public class WebRubric {
 
     @Id
     private UUID id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String name;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private WebLink link;
 
-    @OneToMany(mappedBy = "source", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<WebRubric> rubrics = new HashSet<>();
+    @ManyToOne
+    @JoinColumn
+    private WebSource source;
+
+    @OneToMany(mappedBy = "rubric", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+//    @OrderBy("dateTime ASC")
+    private List<WebNews> news = new ArrayList<>();
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -42,12 +48,13 @@ public class WebSource {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        WebSource webSource = (WebSource) o;
-        return getId() != null && Objects.equals(getId(), webSource.getId());
+        WebRubric webRubric = (WebRubric) o;
+        return getId() != null && Objects.equals(getId(), webRubric.getId());
     }
 
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
+
 }

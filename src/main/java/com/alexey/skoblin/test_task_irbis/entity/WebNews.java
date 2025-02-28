@@ -4,30 +4,32 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
-import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Objects;
+import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
-public class WebSource {
+@Table(indexes = @Index(columnList = "dateTime"))
+public class WebNews {
 
     @Id
     private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String name;
+    private String title;
+
+    private LocalDateTime dateTime;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private WebLink link;
 
-    @OneToMany(mappedBy = "source", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<WebRubric> rubrics = new HashSet<>();
+    @ManyToOne
+    @JoinColumn
+    private WebRubric rubric;
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -42,8 +44,8 @@ public class WebSource {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        WebSource webSource = (WebSource) o;
-        return getId() != null && Objects.equals(getId(), webSource.getId());
+        WebNews webNews = (WebNews) o;
+        return getId() != null && Objects.equals(getId(), webNews.getId());
     }
 
     @Override
