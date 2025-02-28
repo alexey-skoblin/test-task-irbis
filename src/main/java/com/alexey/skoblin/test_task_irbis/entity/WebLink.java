@@ -18,7 +18,8 @@ import java.util.UUID;
 @Table(indexes = @Index(columnList = "url"))
 public class WebLink {
 
-
+    @Id
+    private UUID id;
 
     @Column(nullable = false, unique = true)
     private String url;
@@ -28,9 +29,6 @@ public class WebLink {
 
     @LastModifiedDate
     private LocalDateTime modifiedAt;
-
-    @Id
-    private UUID id;
 
     @Override
     public final boolean equals(Object o) {
