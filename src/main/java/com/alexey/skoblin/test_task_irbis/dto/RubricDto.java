@@ -1,6 +1,6 @@
 package com.alexey.skoblin.test_task_irbis.dto;
 
-import com.alexey.skoblin.test_task_irbis.entity.WebRubric;
+import com.alexey.skoblin.test_task_irbis.entity.Rubric;
 import lombok.Value;
 
 import java.io.Serializable;
@@ -8,12 +8,11 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * DTO for {@link WebRubric}
+ * DTO for {@link Rubric}
  */
 @Value
-public class WebRubricDto implements Serializable {
+public class RubricDto implements Serializable {
     UUID id;
     String name;
-    WebLinkDto link;
-    List<WebNewsDto> news;
+    List<NewsDto> news;
 }

@@ -8,28 +8,34 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
-@Table(indexes = @Index(columnList = "dateTime"))
-public class WebNews {
+public class Rubric {
 
     @Id
+    @Column(
+        columnDefinition = "UUID DEFAULT gen_random_uuid()",
+        updatable = false,
+        nullable = false
+    )
     private UUID id;
 
-    private String title;
-
-    private LocalDateTime dateTime;
-
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    private WebLink link;
+    @Column(nullable = false)
+    private String name;
 
     @ManyToOne
     @JoinColumn
-    private WebRubric rubric;
+    private Resource resource;
+
+    @OneToMany(mappedBy = "rubric", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+//    @OrderBy("dateTime ASC")
+    private List<News> news = new ArrayList<>();
 
     @CreatedDate
     private LocalDateTime createdAt;
@@ -44,12 +50,13 @@ public class WebNews {
         Class<?> oEffectiveClass = o instanceof HibernateProxy ? ((HibernateProxy) o).getHibernateLazyInitializer().getPersistentClass() : o.getClass();
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
-        WebNews webNews = (WebNews) o;
-        return getId() != null && Objects.equals(getId(), webNews.getId());
+        Rubric rubric = (Rubric) o;
+        return getId() != null && Objects.equals(getId(), rubric.getId());
     }
 
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
+
 }
