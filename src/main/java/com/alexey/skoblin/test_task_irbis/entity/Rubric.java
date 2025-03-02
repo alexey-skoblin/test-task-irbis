@@ -1,7 +1,10 @@
 package com.alexey.skoblin.test_task_irbis.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.springframework.data.annotation.CreatedDate;
@@ -16,9 +19,13 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Rubric {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(
         columnDefinition = "UUID DEFAULT gen_random_uuid()",
         updatable = false,
@@ -28,6 +35,9 @@ public class Rubric {
 
     @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
+    private String url;
 
     @ManyToOne
     @JoinColumn

@@ -3,6 +3,7 @@ package com.alexey.skoblin.test_task_irbis.service;
 import com.alexey.skoblin.test_task_irbis.dto.ResourceDto;
 import com.alexey.skoblin.test_task_irbis.entity.Resource;
 import com.alexey.skoblin.test_task_irbis.exception.EntityNotFoundByIdException;
+import com.alexey.skoblin.test_task_irbis.exception.EntityNotFoundByNameException;
 import com.alexey.skoblin.test_task_irbis.mapper.ResourceMapper;
 import com.alexey.skoblin.test_task_irbis.repository.ResourceRepository;
 import java.util.List;
@@ -54,5 +55,14 @@ public class ResourceServiceImpl implements ResourceService {
             throw new EntityNotFoundByIdException(Resource.class, uuid.toString());
         }
         resourceRepository.deleteById(uuid);
+    }
+
+    @Override
+    public ResourceDto findByName(String name) {
+        Resource resource = resourceRepository.findByName(name);
+        if (resource == null) {
+            throw new EntityNotFoundByNameException(Resource.class, name);
+        }
+        return resourceMapper.toDto(resource);
     }
 }

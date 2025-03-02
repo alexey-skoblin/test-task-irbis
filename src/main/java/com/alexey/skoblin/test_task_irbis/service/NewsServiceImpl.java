@@ -1,9 +1,13 @@
 package com.alexey.skoblin.test_task_irbis.service;
 
 import com.alexey.skoblin.test_task_irbis.dto.NewsDto;
+import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
 import com.alexey.skoblin.test_task_irbis.entity.News;
+import com.alexey.skoblin.test_task_irbis.entity.Rubric;
 import com.alexey.skoblin.test_task_irbis.exception.EntityNotFoundByIdException;
+import com.alexey.skoblin.test_task_irbis.mapper.BaseMapper;
 import com.alexey.skoblin.test_task_irbis.mapper.NewsMapper;
+import com.alexey.skoblin.test_task_irbis.mapper.RubricMapper;
 import com.alexey.skoblin.test_task_irbis.repository.NewsRepository;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +22,7 @@ public class NewsServiceImpl implements NewsService {
 
     private final NewsMapper newsMapper;
     private final NewsRepository newsRepository;
+    private RubricMapper rubricMapper;
 
     @Override
     public List<NewsDto> findAll() {
@@ -56,5 +61,16 @@ public class NewsServiceImpl implements NewsService {
         }
         newsRepository.deleteById(uuid);
 
+    }
+
+    @Override
+    public void saveAll(List<NewsDto> news, RubricDto rubricDto) {
+        Rubric rubric = rubricMapper.toEntity(rubricDto);
+        List<News> entities = newsMapper.toEntityList(news);
+        for (News entity : entities) {
+            rubric.getNews().add(entity);
+            entity.setRubric(rubric);
+        }
+        newsRepository.saveAll(entities);
     }
 }

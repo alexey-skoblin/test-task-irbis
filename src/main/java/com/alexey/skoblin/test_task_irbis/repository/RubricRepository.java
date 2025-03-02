@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface RubricRepository extends JpaRepository<Rubric, UUID> {
+
+    Rubric findByNameAndResource_Id(String name, UUID id);
 }
