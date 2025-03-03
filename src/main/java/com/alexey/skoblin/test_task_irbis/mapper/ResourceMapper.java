@@ -5,8 +5,10 @@ import com.alexey.skoblin.test_task_irbis.entity.Resource;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
+@Named("ResourceMapper")
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = MappingConstants.ComponentModel.SPRING)
 public interface ResourceMapper extends BaseMapper<ResourceDto, Resource> {
 

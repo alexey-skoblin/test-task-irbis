@@ -87,6 +87,6 @@ public class RubricServiceImpl implements RubricService {
             newsEntity.setRubric(rubric);
         }
         rubricRepository.save(rubric);
-        newsService.saveAll(newsMapper.toDtoList(news));
+//        newsService.saveAll(newsMapper.toDtoList(news));
     }
 }

@@ -1,5 +1,8 @@
 package com.alexey.skoblin.test_task_irbis.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,6 +25,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIdentityInfo(
+    generator = ObjectIdGenerators.PropertyGenerator.class,
+    property = "id")
 public class Rubric {
 
     @Id
@@ -39,8 +45,9 @@ public class Rubric {
     @Column(nullable = false)
     private String url;
 
+    @JsonIdentityReference(alwaysAsId = true)
     @ManyToOne(optional = false)
-    @JoinColumn
+    @JoinColumn(name = "resource_id")
     private Resource resource;
 
     @OneToMany(mappedBy = "rubric", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

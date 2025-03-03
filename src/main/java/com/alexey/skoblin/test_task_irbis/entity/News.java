@@ -1,5 +1,8 @@
 package com.alexey.skoblin.test_task_irbis.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +24,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIdentityInfo(
+    generator = ObjectIdGenerators.PropertyGenerator.class,
+    property = "id")
 public class News {
 
     @Id
@@ -38,8 +44,9 @@ public class News {
 
     private String url;
 
+    @JsonIdentityReference(alwaysAsId = true)
     @ManyToOne(optional = false)
-    @JoinColumn
+    @JoinColumn(name = "rubric_id")
     private Rubric rubric;
 
     @CreatedDate

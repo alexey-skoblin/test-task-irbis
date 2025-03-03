@@ -4,10 +4,13 @@ import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
 import com.alexey.skoblin.test_task_irbis.entity.Rubric;
 import java.util.List;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingConstants.ComponentModel;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 
+@Named("RubricMapper")
 @Mapper(unmappedTargetPolicy = ReportingPolicy.IGNORE, componentModel = ComponentModel.SPRING)
 public interface RubricMapper extends BaseMapper<RubricDto, Rubric> {
 

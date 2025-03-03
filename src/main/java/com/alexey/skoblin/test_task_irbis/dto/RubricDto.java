@@ -1,6 +1,8 @@
 package com.alexey.skoblin.test_task_irbis.dto;
 
 import com.alexey.skoblin.test_task_irbis.entity.Rubric;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Builder;
 import lombok.Value;
 

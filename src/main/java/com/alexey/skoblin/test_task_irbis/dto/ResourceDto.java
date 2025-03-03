@@ -2,6 +2,8 @@ package com.alexey.skoblin.test_task_irbis.dto;
 
 import com.alexey.skoblin.test_task_irbis.entity.Resource;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import java.util.HashSet;
 import java.util.Set;
 import lombok.Builder;

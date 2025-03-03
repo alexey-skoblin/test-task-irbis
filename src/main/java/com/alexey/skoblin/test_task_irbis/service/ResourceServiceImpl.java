@@ -84,7 +84,6 @@ public class ResourceServiceImpl implements ResourceService {
             rubric.setResource(resource);
         }
         resourceRepository.save(resource);
-        rubricService.saveAll(rubricMapper.toDtoList(rubrics));
-        resourceMapper.toDto(resource);
+//        rubricService.saveAll(rubricMapper.toDtoList(rubrics));
     }
 }
