@@ -1,6 +1,8 @@
 package com.alexey.skoblin.test_task_irbis.dto;
 
 import com.alexey.skoblin.test_task_irbis.entity.Resource;
+
+import java.util.HashSet;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Value;
@@ -17,5 +19,6 @@ public class ResourceDto implements Serializable {
     UUID id;
     String name;
     String url;
-    Set<RubricDto> rubrics;
+    @Builder.Default
+    Set<RubricDto> rubrics = new HashSet<>();
 }

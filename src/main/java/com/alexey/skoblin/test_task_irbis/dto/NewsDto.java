@@ -18,5 +18,4 @@ public class NewsDto implements Serializable {
     String title;
     LocalDateTime dateTime;
     String url;
-
 }

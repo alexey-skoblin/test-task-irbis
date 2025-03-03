@@ -10,15 +10,12 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class SchedulerParsers {
 
-//    @Scheduled
-//    public void LentaRuParsesing(){
-//
-//    }
 
     private LentaParser lentaParser;
 
     @Scheduled(fixedDelay = 10000)
-    private void LentaRuParsesing(){
+    private void LentaRuParsesing() throws InterruptedException {
+//        Thread.sleep(15_000);
         lentaParser.parse();
     }
 

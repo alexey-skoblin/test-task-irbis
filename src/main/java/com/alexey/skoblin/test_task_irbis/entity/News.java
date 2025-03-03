@@ -38,7 +38,7 @@ public class News {
 
     private String url;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn
     private Rubric rubric;
 

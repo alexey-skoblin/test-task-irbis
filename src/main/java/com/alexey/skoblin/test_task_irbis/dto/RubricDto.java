@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Value;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,5 +18,6 @@ public class RubricDto implements Serializable {
     UUID id;
     String name;
     String url;
-    List<NewsDto> news;
+    @Builder.Default
+    List<NewsDto> news = new ArrayList<>();
 }

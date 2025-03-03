@@ -1,10 +1,13 @@
 package com.alexey.skoblin.test_task_irbis.service;
 
 import com.alexey.skoblin.test_task_irbis.dto.ResourceDto;
+import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
 import com.alexey.skoblin.test_task_irbis.entity.Resource;
+import com.alexey.skoblin.test_task_irbis.entity.Rubric;
 import com.alexey.skoblin.test_task_irbis.exception.EntityNotFoundByIdException;
 import com.alexey.skoblin.test_task_irbis.exception.EntityNotFoundByNameException;
 import com.alexey.skoblin.test_task_irbis.mapper.ResourceMapper;
+import com.alexey.skoblin.test_task_irbis.mapper.RubricMapper;
 import com.alexey.skoblin.test_task_irbis.repository.ResourceRepository;
 import java.util.List;
 import java.util.UUID;
@@ -17,8 +20,11 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class ResourceServiceImpl implements ResourceService {
 
+    RubricService rubricService;
+
     ResourceMapper resourceMapper;
     ResourceRepository resourceRepository;
+    private RubricMapper rubricMapper;
 
     @Override
     public List<ResourceDto> findAll() {
@@ -64,5 +70,21 @@ public class ResourceServiceImpl implements ResourceService {
             throw new EntityNotFoundByNameException(Resource.class, name);
         }
         return resourceMapper.toDto(resource);
+    }
+
+    @Override
+    public void saveAllRubricWithResource(List<RubricDto> dtos, ResourceDto resourceDto) {
+        Resource resource = resourceMapper.toEntity(resourceDto);
+        List<Rubric> rubrics = rubricMapper.toEntityList(dtos);
+        for (Rubric rubric : rubrics) {
+            if (rubric.getId() != null) {
+              continue;
+            }
+            resource.getRubrics().add(rubric);
+            rubric.setResource(resource);
+        }
+        resourceRepository.save(resource);
+        rubricService.saveAll(rubricMapper.toDtoList(rubrics));
+        resourceMapper.toDto(resource);
     }
 }

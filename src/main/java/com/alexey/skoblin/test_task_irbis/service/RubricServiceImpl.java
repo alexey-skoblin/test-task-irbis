@@ -1,10 +1,14 @@
 package com.alexey.skoblin.test_task_irbis.service;
 
+import com.alexey.skoblin.test_task_irbis.dto.NewsDto;
 import com.alexey.skoblin.test_task_irbis.dto.ResourceDto;
 import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
+import com.alexey.skoblin.test_task_irbis.entity.News;
 import com.alexey.skoblin.test_task_irbis.entity.Resource;
 import com.alexey.skoblin.test_task_irbis.entity.Rubric;
 import com.alexey.skoblin.test_task_irbis.exception.EntityNotFoundByIdException;
+import com.alexey.skoblin.test_task_irbis.mapper.BaseMapper;
+import com.alexey.skoblin.test_task_irbis.mapper.NewsMapper;
 import com.alexey.skoblin.test_task_irbis.mapper.ResourceMapper;
 import com.alexey.skoblin.test_task_irbis.mapper.RubricMapper;
 import com.alexey.skoblin.test_task_irbis.repository.RubricRepository;
@@ -22,7 +26,8 @@ public class RubricServiceImpl implements RubricService {
 
     RubricMapper rubricMapper;
     RubricRepository rubricRepository;
-    ResourceMapper resourceMapper;
+    private NewsMapper newsMapper;
+    private NewsService newsService;
 
     @Override
     public List<RubricDto> findAll() {
@@ -62,16 +67,8 @@ public class RubricServiceImpl implements RubricService {
     }
 
     @Override
-    public void saveAll(List<RubricDto> dtos, ResourceDto resourceDto) {
-        Resource resource = resourceMapper.toEntity(resourceDto);
+    public void saveAll(List<RubricDto> dtos) {
         List<Rubric> rubrics = rubricMapper.toEntityList(dtos);
-        for (Rubric rubric : rubrics) {
-            if (rubric.getId() != null) {
-              continue;
-            }
-            resource.getRubrics().add(rubric);
-            rubric.setResource(resource);
-        }
         rubricRepository.saveAll(rubrics);
     }
 
@@ -79,5 +76,17 @@ public class RubricServiceImpl implements RubricService {
     public Optional<UUID> findByNameAndResourceId(String name, UUID resourceId) {
         Rubric rubric = rubricRepository.findByNameAndResource_Id(name, resourceId);
         return rubric != null ? Optional.of(rubric.getId()) : Optional.empty();
+    }
+
+    @Override
+    public void saveAllNewsWithRubric(RubricDto rubricDto, List<NewsDto> newsDtos) {
+        Rubric rubric = rubricMapper.toEntity(rubricDto);
+        List<News> news = newsMapper.toEntityList(newsDtos);
+        for (News newsEntity : news) {
+            rubric.getNews().add(newsEntity);
+            newsEntity.setRubric(rubric);
+        }
+        rubricRepository.save(rubric);
+        newsService.saveAll(newsMapper.toDtoList(news));
     }
 }

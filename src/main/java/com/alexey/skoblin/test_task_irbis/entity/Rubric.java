@@ -39,11 +39,11 @@ public class Rubric {
     @Column(nullable = false)
     private String url;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn
     private Resource resource;
 
-    @OneToMany(mappedBy = "rubric", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
+    @OneToMany(mappedBy = "rubric", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 //    @OrderBy("dateTime ASC")
     private List<News> news = new ArrayList<>();
 
