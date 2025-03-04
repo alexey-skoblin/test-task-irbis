@@ -13,5 +13,5 @@ public interface RubricService extends CrudService<RubricDto, UUID> {
 
     Optional<UUID> findByNameAndResourceId(String name, UUID resourceId);
 
-    void saveAllNewsWithRubric(RubricDto rubric, List<NewsDto> news);
+    List<NewsDto> saveAllNewsWithRubric(RubricDto rubric, List<NewsDto> news);
 }

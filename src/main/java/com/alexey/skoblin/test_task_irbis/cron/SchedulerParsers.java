@@ -1,8 +1,8 @@
 package com.alexey.skoblin.test_task_irbis.cron;
 
 import com.alexey.skoblin.test_task_irbis.output.parser.LentaParser;
+import com.alexey.skoblin.test_task_irbis.output.parser.RiaRuParser;
 import lombok.AllArgsConstructor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -10,13 +10,15 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class SchedulerParsers {
 
-
     private LentaParser lentaParser;
 
-    @Scheduled(fixedDelay = 10000)
+    private RiaRuParser riaRuParser;
+
+    @Scheduled(fixedDelay = 100000)
     private void LentaRuParsesing() throws InterruptedException {
-//        Thread.sleep(15_000);
-        lentaParser.parse();
+        //TODO: ПОВТОРЯЕМОСТЬ ЭЛЕМЕНТОВ ПАРСИНГА ПЕРЕПРОВЕРИТЬ
+        //lentaParser.parse();
+        riaRuParser.parse();
     }
 
 }

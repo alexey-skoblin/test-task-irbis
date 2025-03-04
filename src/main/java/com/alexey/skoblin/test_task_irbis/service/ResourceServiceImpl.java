@@ -42,7 +42,8 @@ public class ResourceServiceImpl implements ResourceService {
     public ResourceDto create(ResourceDto dto) {
         Resource resource = resourceMapper.toEntity(dto);
         resource = resourceRepository.save(resource);
-        return resourceMapper.toDto(resource);
+        ResourceDto resourceDto = resourceMapper.toDto(resource);
+        return resourceDto;
     }
 
     @Override
@@ -73,7 +74,7 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public void saveAllRubricWithResource(List<RubricDto> dtos, ResourceDto resourceDto) {
+    public List<RubricDto> saveAllRubricWithResource(List<RubricDto> dtos, ResourceDto resourceDto) {
         Resource resource = resourceMapper.toEntity(resourceDto);
         List<Rubric> rubrics = rubricMapper.toEntityList(dtos);
         for (Rubric rubric : rubrics) {
@@ -84,6 +85,7 @@ public class ResourceServiceImpl implements ResourceService {
             rubric.setResource(resource);
         }
         resourceRepository.save(resource);
+        return rubricMapper.toDtoList(rubrics);
 //        rubricService.saveAll(rubricMapper.toDtoList(rubrics));
     }
 }

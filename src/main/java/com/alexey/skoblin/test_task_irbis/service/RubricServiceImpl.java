@@ -79,7 +79,7 @@ public class RubricServiceImpl implements RubricService {
     }
 
     @Override
-    public void saveAllNewsWithRubric(RubricDto rubricDto, List<NewsDto> newsDtos) {
+    public List<NewsDto> saveAllNewsWithRubric(RubricDto rubricDto, List<NewsDto> newsDtos) {
         Rubric rubric = rubricMapper.toEntity(rubricDto);
         List<News> news = newsMapper.toEntityList(newsDtos);
         for (News newsEntity : news) {
@@ -87,6 +87,7 @@ public class RubricServiceImpl implements RubricService {
             newsEntity.setRubric(rubric);
         }
         rubricRepository.save(rubric);
+        return newsMapper.toDtoList(news);
 //        newsService.saveAll(newsMapper.toDtoList(news));
     }
 }

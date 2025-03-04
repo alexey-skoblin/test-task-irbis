@@ -6,7 +6,10 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import java.util.HashSet;
 import java.util.Set;
+
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.Value;
 
 import java.io.Serializable;
@@ -21,6 +24,8 @@ public class ResourceDto implements Serializable {
     UUID id;
     String name;
     String url;
+    @NotNull
     @Builder.Default
     Set<RubricDto> rubrics = new HashSet<>();
+
 }

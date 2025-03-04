@@ -40,7 +40,7 @@ public class Resource {
 
     private String url;
 
-    @OneToMany(mappedBy = "resource", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "resource", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Rubric> rubrics = new HashSet<>();
 
     @CreatedDate
