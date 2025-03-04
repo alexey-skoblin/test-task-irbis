@@ -6,7 +6,8 @@ import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
 import com.alexey.skoblin.test_task_irbis.mapper.ResourceMapper;
 import com.alexey.skoblin.test_task_irbis.service.ResourceService;
 import com.alexey.skoblin.test_task_irbis.service.RubricService;
-import com.alexey.skoblin.test_task_irbis.utils.DateTimeParser;
+import com.alexey.skoblin.test_task_irbis.time.DateTimeParser;
+import com.alexey.skoblin.test_task_irbis.time.RiaDateTimeParser;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -33,7 +34,7 @@ public class RiaRuParser {
     private final ResourceService resourceService;
     private final RubricService rubricService;
 
-    private final DateTimeParser dateTimeParser;
+    private final RiaDateTimeParser dateTimeParser;
     private final ResourceMapper resourceMapper;
 
     public void parse() {
@@ -64,31 +65,35 @@ public class RiaRuParser {
             rubrics.forEach(rubric -> {
                 try {
                     Document rubricDoc = Jsoup.connect(resource.getUrl() + rubric.getUrl()).get();
-//                    List<Element> newsItems = getNewsItems(rubricDoc);
+                    List<Element> newsItems = rubricDoc.select(".list-item");
                     List<NewsDto> news = new ArrayList<>();
-//                    for (Element item : newsItems) {
-//                        Element titleElement = item.selectFirst("[class*='title']");
-//                        if (titleElement == null) {
-//                            continue;
-//                        }
-//                        String title = titleElement.text();
-//                        String url = item.attr("href");
-//                        Element timeElement = item.selectFirst("time");
-//                        String timeString = timeElement != null ? timeElement.text() : "";
-//                        LocalDateTime dateTime;
-//                        try {
-//                            dateTime = dateTimeParser.parse(url, timeString);
-//                        } catch (DateTimeParseException eNewsDateTime) {
-//                            log.atWarn().log("Error parsing dateTime for news: " + eNewsDateTime);
-//                            continue;
-//                        }
-//                        news.add(NewsDto.builder()
-//                                .title(title)
-//                                .url(url)
-//                                .dateTime(dateTime)
-//                                .build()
-//                        );
-//                    }
+                    for (Element item : newsItems) {
+                        Element titleElement = item.selectFirst("meta[itemprop=name]");
+                        if (titleElement == null) {
+                            continue;
+                        }
+                        String title = titleElement.attr("content");
+                        Element urlElement = item.selectFirst("a");
+                        if (urlElement == null) {
+                            continue;
+                        }
+                        String url = urlElement.attr("href");
+                        Element timeElement = item.selectFirst("div[data-type=date]");
+                        String timeString = timeElement != null ? timeElement.text() : "";
+                        LocalDateTime dateTime;
+                        try {
+                            dateTime = dateTimeParser.parse(url, timeString);
+                        } catch (DateTimeParseException eNewsDateTime) {
+                            log.atWarn().log("Error parsing dateTime for news: " + eNewsDateTime);
+                            continue;
+                        }
+                        news.add(NewsDto.builder()
+                                .title(title)
+                                .url(url)
+                                .dateTime(dateTime)
+                                .build()
+                        );
+                    }
                     news = rubricService.saveAllNewsWithRubric(rubric, news);
                 } catch (IOException eNews) {
                     log.atWarn().log("Parsing news for rubric: {} in resource: {} HttpStatusException: {}", NAME, rubric.getName(), eNews.getMessage());

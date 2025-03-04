@@ -17,7 +17,7 @@ public class SchedulerParsers {
     @Scheduled(fixedDelay = 100000)
     private void LentaRuParsesing() throws InterruptedException {
         //TODO: ПОВТОРЯЕМОСТЬ ЭЛЕМЕНТОВ ПАРСИНГА ПЕРЕПРОВЕРИТЬ
-        //lentaParser.parse();
+        lentaParser.parse();
         riaRuParser.parse();
     }
 

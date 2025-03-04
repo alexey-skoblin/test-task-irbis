@@ -1,8 +1,7 @@
-package com.alexey.skoblin.test_task_irbis.utils;
+package com.alexey.skoblin.test_task_irbis.time;
 
 import org.springframework.stereotype.Component;
 
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;

@@ -3,15 +3,11 @@ package com.alexey.skoblin.test_task_irbis.output.parser;
 import com.alexey.skoblin.test_task_irbis.dto.NewsDto;
 import com.alexey.skoblin.test_task_irbis.dto.ResourceDto;
 import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
-import com.alexey.skoblin.test_task_irbis.entity.Resource;
 import com.alexey.skoblin.test_task_irbis.mapper.ResourceMapper;
-import com.alexey.skoblin.test_task_irbis.mapper.RubricMapper;
-import com.alexey.skoblin.test_task_irbis.service.NewsService;
 import com.alexey.skoblin.test_task_irbis.service.ResourceService;
 import com.alexey.skoblin.test_task_irbis.service.RubricService;
 
 import java.io.IOException;
-import java.time.DateTimeException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -20,7 +16,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-import com.alexey.skoblin.test_task_irbis.utils.DateTimeParser;
+import com.alexey.skoblin.test_task_irbis.time.DateTimeParser;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -28,9 +24,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @AllArgsConstructor
