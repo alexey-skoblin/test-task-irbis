@@ -1,21 +1,28 @@
 package com.alexey.skoblin.test_task_irbis.service;
 
 import com.alexey.skoblin.test_task_irbis.dto.ResourceDto;
-import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
+import com.alexey.skoblin.test_task_irbis.dto.request.ResourceWebDto;
 import com.alexey.skoblin.test_task_irbis.entity.Resource;
-import com.alexey.skoblin.test_task_irbis.entity.Rubric;
 import com.alexey.skoblin.test_task_irbis.exception.EntityNotFoundByIdException;
 import com.alexey.skoblin.test_task_irbis.exception.EntityNotFoundByNameException;
 import com.alexey.skoblin.test_task_irbis.mapper.ResourceMapper;
-import com.alexey.skoblin.test_task_irbis.mapper.RubricMapper;
 import com.alexey.skoblin.test_task_irbis.repository.ResourceRepository;
+
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
-import com.alexey.skoblin.test_task_irbis.repository.RubricRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Transactional
 @Service
@@ -24,17 +31,13 @@ public class ResourceServiceImpl implements ResourceService {
 
     private ResourceMapper resourceMapper;
     private ResourceRepository resourceRepository;
-    private RubricMapper rubricMapper;
 
-    @Override
-    public List<ResourceDto> findAll() {
-        return resourceMapper.toDtoList(resourceRepository.findAll());
-    }
+    private final ObjectMapper objectMapper;
 
     @Override
     public ResourceDto findById(UUID uuid) {
         Resource resource = resourceRepository.findById(uuid)
-            .orElseThrow(() -> new EntityNotFoundByIdException(Resource.class, uuid.toString()));
+                .orElseThrow(() -> new EntityNotFoundByIdException(Resource.class, uuid.toString()));
         return resourceMapper.toDto(resource);
     }
 
@@ -48,7 +51,7 @@ public class ResourceServiceImpl implements ResourceService {
     @Override
     public ResourceDto update(UUID uuid, ResourceDto dto) {
         Resource resource = resourceRepository.findById(uuid)
-            .orElseThrow(() -> new EntityNotFoundByIdException(Resource.class, uuid.toString()));
+                .orElseThrow(() -> new EntityNotFoundByIdException(Resource.class, uuid.toString()));
         resource.setName(dto.name());
         resource.setUrl(dto.url());
 
@@ -57,11 +60,18 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public void delete(UUID uuid) {
-        if (!resourceRepository.existsById(uuid)) {
-            throw new EntityNotFoundByIdException(Resource.class, uuid.toString());
-        }
+    public ResourceWebDto delete(UUID uuid) {
+        Resource resource = resourceRepository.findById(uuid)
+                .orElseThrow(() -> new EntityNotFoundByIdException(Resource.class, uuid.toString()));
         resourceRepository.deleteById(uuid);
+        return resourceMapper.toResourceWebDto(resource);
+    }
+
+    @Override
+    public ResourceWebDto getById(UUID id) {
+        Resource resource = resourceRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundByIdException(Resource.class, id.toString()));
+        return resourceMapper.toResourceWebDto(resource);
     }
 
     @Override
@@ -74,15 +84,16 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
-    public List<RubricDto> saveAllRubricWithResource(List<RubricDto> dtos, ResourceDto resourceDto) {
-        Resource resource = resourceMapper.toEntity(resourceDto);
-        List<Rubric> rubrics = rubricMapper.toEntityList(dtos);
-        for (Rubric rubric : rubrics) {
-            resource.getRubrics().add(rubric);
-            rubric.setResource(resource);
-        }
-        resourceRepository.save(resource);
-        return rubricMapper.toDtoList(rubrics);
+    public Page<ResourceWebDto> getAll(Pageable pageable) {
+        Page<Resource> page = resourceRepository.findAll(pageable);
+        return page.map(e -> resourceMapper.toResourceWebDto(e));
+    }
+
+    @Override
+    public ResourceWebDto create(ResourceWebDto resource) {
+        Resource entity = resourceMapper.toEntity(resource);
+        entity = resourceRepository.save(entity);
+        return resourceMapper.toResourceWebDto(entity);
     }
 
 }

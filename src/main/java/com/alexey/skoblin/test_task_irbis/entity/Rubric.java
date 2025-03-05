@@ -15,10 +15,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -51,15 +48,20 @@ public class Rubric {
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
-    @Builder.Default
-    @OneToMany(mappedBy = "rubric", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<News> news = new ArrayList<>();
+
 
     @CreatedDate
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     private LocalDateTime modifiedAt;
+
+    @Builder.Default
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @JoinTable(name = "Rubric_news",
+            joinColumns = @JoinColumn(name = "rubric_"),
+            inverseJoinColumns = @JoinColumn(name = "news_id"))
+    private List<News> news = new ArrayList<>();
 
     @Override
     public final boolean equals(Object o) {

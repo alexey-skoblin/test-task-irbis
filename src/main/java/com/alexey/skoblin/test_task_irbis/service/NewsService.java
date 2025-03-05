@@ -6,10 +6,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface NewsService extends CrudService<NewsDto, UUID> {
+public interface NewsService {
 
+    NewsDto findById(UUID uuid);
+
+    NewsDto create(NewsDto dto);
+
+    NewsDto update(UUID uuid, NewsDto dto);
+
+    NewsDto delete(UUID uuid);
 
     Optional<UUID> findByUrl(String url);
-
-    void saveAll(List<NewsDto> news);
 }

@@ -1,108 +1,144 @@
 package com.alexey.skoblin.test_task_irbis.output.parser;
 
-import com.alexey.skoblin.test_task_irbis.dto.NewsDto;
 import com.alexey.skoblin.test_task_irbis.dto.ResourceDto;
-import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
-import com.alexey.skoblin.test_task_irbis.service.NewsService;
-import com.alexey.skoblin.test_task_irbis.service.ResourceService;
-import com.alexey.skoblin.test_task_irbis.service.RubricService;
+import com.alexey.skoblin.test_task_irbis.entity.News;
+import com.alexey.skoblin.test_task_irbis.entity.Resource;
+import com.alexey.skoblin.test_task_irbis.entity.Rubric;
+import com.alexey.skoblin.test_task_irbis.mapper.ResourceMapper;
 import com.alexey.skoblin.test_task_irbis.time.RiaDateTimeParser;
+import com.alexey.skoblin.test_task_irbis.utils.JsoupUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.random.RandomGenerator;
+import java.util.stream.Collectors;
 
 @Component
 @AllArgsConstructor
 @Slf4j
 public class RiaRuParser {
 
-    private static final String NAME = "РИА";
+    private static final String RUBRIC_ITEM_SELECTOR = ".m-with-title";
+    private static final String RUBRIC_LINK_SELECTOR = "[class*=link]";
+    private static final String NEWS_ITEM_SELECTOR = ".list-item";
+    private static final String NEWS_TITLE_SELECTOR = "meta[itemprop=name]";
+    private static final String NEWS_URL_SELECTOR = "a";
+    private static final String NEWS_DATE_SELECTOR = "div[data-type=date]";
 
-    private ResourceService resourceService;
-    private RubricService rubricService;
+    private final RiaDateTimeParser dateTimeParser;
+    private final ResourceMapper resourceMapper;
 
-    private RiaDateTimeParser dateTimeParser;
-    private NewsService newsService;
+    private final int SLEEP_SECONDS = 60;
 
-    public void parse() {
-        ResourceDto resource = resourceService.findByName(NAME);
+    public ResourceDto parse(ResourceDto resourceDto) {
         try {
-            log.atInfo().log("Parsing {} started", NAME);
-            Document doc = Jsoup.connect(resource.url()).get();
+            log.atInfo().log("Parsing {} started", resourceDto.name());
+            Document mainPageDoc = JsoupUtils.createHumanizedConnection(resourceDto.url()).get();
+            Resource resultResource = resourceMapper.toEntity(resourceDto);
 
-            Elements rubricItems = doc.select(".m-with-title");
-            List<RubricDto> rubrics = new ArrayList<>();
-            for (Element item : rubricItems) {
-                Element link = item.selectFirst("[class*=link]");
-                if (link != null) {
-                    String name = link.text();
-                    String url = link.attr("href");
-                    Optional<UUID> uuid = rubricService
-                            .findIdByUrlAndResourceId(resource.id(), name);
-                    RubricDto rubric = RubricDto.builder()
-                            .id(uuid.orElse(null))
-                            .name(name)
-                            .url(url)
-                            .build();
-                    rubrics.add(rubric);
-                }
-            }
-            rubrics = resourceService.saveAllRubricWithResource(rubrics, resource);
-
-            rubrics.forEach(rubric -> {
+            resultResource.setRubrics(parseRubrics(resultResource, mainPageDoc));
+            resultResource.getRubrics().forEach(rubric -> {
                 try {
-                    Document rubricDoc = Jsoup.connect(resource.url() + rubric.url()).get();
-                    List<Element> newsItems = rubricDoc.select(".list-item");
-                    List<NewsDto> news = new ArrayList<>();
-                    for (Element item : newsItems) {
-                        Element titleElement = item.selectFirst("meta[itemprop=name]");
-                        if (titleElement == null) {
-                            continue;
-                        }
-                        String title = titleElement.attr("content");
-                        Element urlElement = item.selectFirst("a");
-                        if (urlElement == null) {
-                            continue;
-                        }
-                        String url = urlElement.attr("href");
-                        Element timeElement = item.selectFirst("div[data-type=date]");
-                        String timeString = timeElement != null ? timeElement.text() : "";
-                        LocalDateTime dateTime;
-                        try {
-                            dateTime = dateTimeParser.parse(url, timeString);
-                        } catch (DateTimeParseException eNewsDateTime) {
-                            log.atWarn().log("Error parsing dateTime for news: " + eNewsDateTime);
-                            continue;
-                        }
-                        Optional<UUID> uuid = newsService.findByUrl(url);
-                        NewsDto newsDto = NewsDto.builder()
-                                .id(uuid.orElse(null))
-                                .title(title)
-                                .url(url)
-                                .dateTime(dateTime)
-                                .build();
-                        news.add(newsDto);
-                    }
-                    news = rubricService.saveAllNewsWithRubric(rubric, news);
-                } catch (IOException eNews) {
-                    log.atWarn().log("Parsing news for rubric: {} in resource: {} HttpStatusException: {}", NAME, rubric.name(), eNews.getMessage());
+                    TimeUnit.SECONDS.sleep(SLEEP_SECONDS + RandomGenerator.getDefault().nextInt(SLEEP_SECONDS));
+                } catch (InterruptedException ie) {
+                    log.warn("InterruptedException: {}", ie.getMessage());
                 }
+                rubric.getNews().addAll(parseNews(rubric, resourceDto.url()));
             });
+
+            return resourceMapper.toDto(resultResource);
         } catch (IOException e) {
-            log.atWarn().log("Parsing resource {} IOException: {}", NAME, e.getMessage());
+            log.atWarn().log("Parsing resourceDto {} IOException: {}", resourceDto.name(), e.getMessage());
         }
-        log.atInfo().log("Parsing {} ended", NAME);
+
+        log.atInfo().log("Parsing {} ended", resourceDto.name());
+        return resourceDto;
+    }
+
+    private List<Rubric> parseRubrics(Resource resource, Document document) {
+        return document.select(RUBRIC_ITEM_SELECTOR).stream()
+                .map(this::parseRubricCard)
+                .filter(Objects::nonNull)
+//                .peek(rubric -> rubric.setResource(resource))
+                .collect(Collectors.toList());
+    }
+
+    private Rubric parseRubricCard(Element item) {
+        try {
+            Element link = item.selectFirst(RUBRIC_LINK_SELECTOR);
+            if (link == null) {
+                return null;
+            }
+            String url = link.attr("href");
+            if (url.isEmpty()) {
+                return null;
+            }
+            return Rubric.builder()
+                    .name(link.text())
+                    .url(url)
+                    .news(new ArrayList<>())
+                    .build();
+        } catch (Exception e) {
+            log.atWarn().log("Error parsing news item: {} in item {}", e.getMessage(), item);
+            return null;
+        }
+    }
+
+    private List<News> parseNews(Rubric rubric, String baseUrl) {
+        try {
+            Document rubricDoc = JsoupUtils.createHumanizedConnection(baseUrl + rubric.getUrl()).get();
+            return rubricDoc.select(NEWS_ITEM_SELECTOR).stream()
+                    .map(this::parseNewsCard)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            log.atWarn().log("Error parsing rubric: {}, error: {}", rubric.getName(), e.getMessage());
+        }
+        return Collections.emptyList();
+    }
+
+    private News parseNewsCard(Element card) {
+        try {
+            Element titleElement = card.selectFirst(NEWS_TITLE_SELECTOR);
+            Element urlElement = card.selectFirst(NEWS_URL_SELECTOR);
+            Element timeElement = card.selectFirst(NEWS_DATE_SELECTOR);
+
+            if (titleElement == null || urlElement == null) {
+                return null;
+            }
+
+            String title = titleElement.attr("content");
+            String url = urlElement.attr("href");
+            String timeString = timeElement != null ? timeElement.text() : "";
+
+            LocalDateTime dateTime = parseNewsDate(url, timeString);
+
+            return News.builder()
+                    .title(title)
+                    .url(url)
+                    .dateTime(dateTime)
+                    .build();
+        } catch (Exception e) {
+            log.atWarn().log("Error parsing news card : {} in item {}", e.getMessage(), card);
+            return null;
+        }
+    }
+
+    private LocalDateTime parseNewsDate(String url, String timeString) {
+        try {
+            return dateTimeParser.parse(url, timeString);
+        } catch (DateTimeParseException e) {
+            log.atWarn().log("Error parsing date for news: {} cause {}", url, e.getMessage());
+            return null;
+        }
     }
 }

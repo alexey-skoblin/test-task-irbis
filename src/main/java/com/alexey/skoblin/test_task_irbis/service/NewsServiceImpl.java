@@ -20,12 +20,6 @@ public class NewsServiceImpl implements NewsService {
 
     private final NewsMapper newsMapper;
     private final NewsRepository newsRepository;
-    private RubricMapper rubricMapper;
-
-    @Override
-    public List<NewsDto> findAll() {
-        return newsMapper.toDtoList(newsRepository.findAll());
-    }
 
     @Override
     public NewsDto findById(UUID uuid) {
@@ -53,12 +47,11 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
-    public void delete(UUID uuid) {
-        if (!newsRepository.existsById(uuid)) {
-            throw new EntityNotFoundByIdException(News.class, uuid.toString());
-        }
+    public NewsDto delete(UUID uuid) {
+        News news = newsRepository.findById(uuid)
+            .orElseThrow(() -> new EntityNotFoundByIdException(News.class, uuid.toString()));
         newsRepository.deleteById(uuid);
-
+        return newsMapper.toDto(news);
     }
 
     @Override
@@ -66,9 +59,4 @@ public class NewsServiceImpl implements NewsService {
         return newsRepository.findIdByUrl(url);
     }
 
-    @Override
-    public void saveAll(List<NewsDto> news) {
-        List<News> entities = newsMapper.toEntityList(news);
-        newsRepository.saveAll(entities);
-    }
 }

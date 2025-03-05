@@ -14,12 +14,11 @@ import org.mapstruct.*;
 public interface NewsSlimMapper extends BaseMapper<NewsDto, News> {
 
     @Named("toSlimNews")
-    @Mapping(target = "rubric", ignore = true)
+    @Mapping(target = "rubrics", ignore = true, defaultExpression = "java(new java.util.ArrayList<>())")
     News toSlimEntry(NewsDto dto);
 
     @Named("toSlimNewsDto")
-    @Mapping(target = "rubric", ignore = true)
+    @Mapping(target = "rubrics", ignore = true, defaultExpression = "java(new java.util.ArrayList<>())")
     NewsDto toSlimDto(News news);
-
 
 }

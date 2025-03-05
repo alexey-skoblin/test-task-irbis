@@ -6,11 +6,15 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface RubricService extends CrudService<RubricDto, UUID> {
+public interface RubricService {
 
-    void saveAll(List<RubricDto> dtos);
+    RubricDto findById(UUID uuid);
+
+    RubricDto create(RubricDto dto);
+
+    RubricDto update(UUID uuid, RubricDto dto);
+
+    RubricDto delete(UUID uuid);
 
     Optional<UUID> findIdByUrlAndResourceId(UUID resourceId, String name);
-
-    List<NewsDto> saveAllNewsWithRubric(RubricDto rubric, List<NewsDto> news);
 }

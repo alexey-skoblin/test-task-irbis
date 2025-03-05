@@ -10,6 +10,7 @@ import lombok.Value;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.mapstruct.Mapping;
@@ -23,5 +24,5 @@ public record NewsDto(
         String title,
         LocalDateTime dateTime,
         String url,
-        RubricDto rubric) {
+        List<RubricDto> rubrics) {
 }

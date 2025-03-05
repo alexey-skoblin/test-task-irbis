@@ -14,8 +14,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 @Setter
@@ -45,16 +44,16 @@ public class News {
     @Column(nullable = false, unique = true)
     private String url;
 
-    @JsonIdentityReference(alwaysAsId = true)
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "rubric_id")
-    private Rubric rubric;
 
     @CreatedDate
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     private LocalDateTime modifiedAt;
+
+    @Builder.Default
+    @ManyToMany(mappedBy = "news", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    private List<Rubric> rubrics = new ArrayList<>();
 
     @Override
     public final boolean equals(Object o) {

@@ -15,10 +15,10 @@ import org.mapstruct.factory.Mappers;
 public interface NewsMapper extends BaseMapper<NewsDto, News> {
 
     @Override
-    @Mapping(target = "rubric", qualifiedByName = "toSlimRubric")
+    @Mapping(target = "rubrics", qualifiedByName = "toSlimRubric")
     News toEntity(NewsDto dto);
 
     @Override
-    @Mapping(target = "rubric", qualifiedByName = "toSlimRubricDto")
+    @Mapping(target = "rubrics", qualifiedByName = "toSlimRubricDto")
     NewsDto toDto(News entity);
 }

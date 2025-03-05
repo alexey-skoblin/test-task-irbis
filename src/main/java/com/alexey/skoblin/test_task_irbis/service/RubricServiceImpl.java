@@ -22,12 +22,6 @@ public class RubricServiceImpl implements RubricService {
 
     private RubricMapper rubricMapper;
     private RubricRepository rubricRepository;
-    private NewsMapper newsMapper;
-
-    @Override
-    public List<RubricDto> findAll() {
-        return rubricMapper.toDtoList(rubricRepository.findAll());
-    }
 
     @Override
     public RubricDto findById(UUID uuid) {
@@ -54,17 +48,11 @@ public class RubricServiceImpl implements RubricService {
     }
 
     @Override
-    public void delete(UUID uuid) {
-        if (!rubricRepository.existsById(uuid)) {
-            throw new EntityNotFoundByIdException(Rubric.class, uuid.toString());
-        }
+    public RubricDto delete(UUID uuid) {
+        Rubric rubric = rubricRepository.findById(uuid)
+            .orElseThrow(() -> new EntityNotFoundByIdException(Rubric.class, uuid.toString()));
         rubricRepository.deleteById(uuid);
-    }
-
-    @Override
-    public void saveAll(List<RubricDto> dtos) {
-        List<Rubric> rubrics = rubricMapper.toEntityList(dtos);
-        rubricRepository.saveAll(rubrics);
+        return rubricMapper.toDto(rubric);
     }
 
     @Override
@@ -72,16 +60,4 @@ public class RubricServiceImpl implements RubricService {
         return rubricRepository.findIdByUrlAndResourceId(name, resourceId);
     }
 
-    @Override
-    public List<NewsDto> saveAllNewsWithRubric(RubricDto rubricDto, List<NewsDto> newsDtos) {
-        Rubric rubric = rubricMapper.toEntity(rubricDto);
-        List<News> news = newsMapper.toEntityList(newsDtos);
-        for (News newsEntity : news) {
-            rubric.getNews().add(newsEntity);
-            newsEntity.setRubric(rubric);
-        }
-        rubricRepository.save(rubric);
-        return newsMapper.toDtoList(news);
-//        newsService.saveAll(newsMapper.toDtoList(news));
-    }
 }

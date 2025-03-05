@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -33,6 +34,8 @@ public class LentaParser {
     private final DateTimeParser dateTimeParser;
     private ResourceMapper resourceMapper;
 
+    private final int SLEEP_SECONDS = 1;
+
     public ResourceDto parse(ResourceDto resourceDto) {
         try {
             log.atInfo().log("Parsing {} started", resourceDto.name());
@@ -40,13 +43,17 @@ public class LentaParser {
             Resource resultResource = resourceMapper.toEntity(resourceDto);
             resultResource.setRubrics(parseRubrics(resultResource, mainPageDoc));
             resultResource.getRubrics().forEach(rubric -> {
-                        rubric.setNews(parseNews(rubric, resourceDto.url()));
-                    });
+                try {
+                    TimeUnit.SECONDS.sleep(SLEEP_SECONDS);
+                } catch (InterruptedException ie) {
+                    log.warn("InterruptedException: {}", ie.getMessage());
+                }
+                rubric.getNews().addAll(parseNews(rubric, resourceDto.url()));
+            });
             return resourceMapper.toDto(resultResource);
         } catch (IOException e) {
             log.atWarn().log("Parsing resourceDto {} IOException: {}", resourceDto.name(), e.getMessage());
         }
-
         log.atInfo().log("Parsing {} ended", resourceDto.name());
         return resourceDto;
     }
@@ -55,7 +62,6 @@ public class LentaParser {
         return document.select(RUBRIC_ITEM_SELECTOR).stream()
                 .map(LentaParser::parseRubricCard)
                 .filter(Objects::nonNull)
-//                .peek(rubric -> rubric.setResource(resource))
                 .collect(Collectors.toList());
     }
 
@@ -74,7 +80,7 @@ public class LentaParser {
                     .url(url)
                     .build();
         } catch (Exception e) {
-            log.warn("Error parsing rubric card: {}", e.getMessage());
+            log.atWarn().log("Error parsing news item: {} in item {}", e.getMessage(), item);
             return null;
         }
     }
@@ -119,7 +125,7 @@ public class LentaParser {
                     .dateTime(date)
                     .build();
         } catch (Exception e) {
-            log.warn("Error parsing news card: {}", e.getMessage());
+            log.atWarn().log("Error parsing news card : {} in item {}", e.getMessage(), card);
             return null;
         }
     }
@@ -128,7 +134,7 @@ public class LentaParser {
         try {
             return dateTimeParser.parse(url, timeElement.text());
         } catch (DateTimeParseException e) {
-            log.warn("Error parsing date for news: {}", url);
+            log.atWarn().log("Error parsing date for news: {} cause {}", url, e.getMessage());
             return null;
         }
     }
