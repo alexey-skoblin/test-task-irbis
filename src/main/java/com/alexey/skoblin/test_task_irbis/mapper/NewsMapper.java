@@ -4,11 +4,7 @@ package com.alexey.skoblin.test_task_irbis.mapper;
 import com.alexey.skoblin.test_task_irbis.dto.NewsDto;
 import com.alexey.skoblin.test_task_irbis.entity.News;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
-import org.mapstruct.Named;
-import org.mapstruct.ReportingPolicy;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 @Named("NewsMapper")

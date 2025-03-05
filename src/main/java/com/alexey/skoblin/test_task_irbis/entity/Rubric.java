@@ -43,7 +43,7 @@ public class Rubric {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String url;
 
     @JsonIdentityReference(alwaysAsId = true)
@@ -51,8 +51,8 @@ public class Rubric {
     @JoinColumn(name = "resource_id")
     private Resource resource;
 
+    @Builder.Default
     @OneToMany(mappedBy = "rubric", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-//    @OrderBy("dateTime ASC")
     private List<News> news = new ArrayList<>();
 
     @CreatedDate

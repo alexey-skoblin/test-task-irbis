@@ -42,6 +42,7 @@ public class News {
 
     private LocalDateTime dateTime;
 
+    @Column(nullable = false, unique = true)
     private String url;
 
     @JsonIdentityReference(alwaysAsId = true)

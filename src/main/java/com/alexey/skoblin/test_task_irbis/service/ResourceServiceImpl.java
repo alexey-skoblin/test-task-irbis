@@ -11,6 +11,8 @@ import com.alexey.skoblin.test_task_irbis.mapper.RubricMapper;
 import com.alexey.skoblin.test_task_irbis.repository.ResourceRepository;
 import java.util.List;
 import java.util.UUID;
+
+import com.alexey.skoblin.test_task_irbis.repository.RubricRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class ResourceServiceImpl implements ResourceService {
 
-    RubricService rubricService;
-
-    ResourceMapper resourceMapper;
-    ResourceRepository resourceRepository;
+    private ResourceMapper resourceMapper;
+    private ResourceRepository resourceRepository;
     private RubricMapper rubricMapper;
 
     @Override
@@ -42,16 +42,16 @@ public class ResourceServiceImpl implements ResourceService {
     public ResourceDto create(ResourceDto dto) {
         Resource resource = resourceMapper.toEntity(dto);
         resource = resourceRepository.save(resource);
-        ResourceDto resourceDto = resourceMapper.toDto(resource);
-        return resourceDto;
+        return resourceMapper.toDto(resource);
     }
 
     @Override
     public ResourceDto update(UUID uuid, ResourceDto dto) {
         Resource resource = resourceRepository.findById(uuid)
             .orElseThrow(() -> new EntityNotFoundByIdException(Resource.class, uuid.toString()));
-        resource.setName(dto.getName());
-        resource.setUrl(dto.getUrl());
+        resource.setName(dto.name());
+        resource.setUrl(dto.url());
+
         resource = resourceRepository.save(resource);
         return resourceMapper.toDto(resource);
     }
@@ -78,14 +78,11 @@ public class ResourceServiceImpl implements ResourceService {
         Resource resource = resourceMapper.toEntity(resourceDto);
         List<Rubric> rubrics = rubricMapper.toEntityList(dtos);
         for (Rubric rubric : rubrics) {
-            if (rubric.getId() != null) {
-              continue;
-            }
             resource.getRubrics().add(rubric);
             rubric.setResource(resource);
         }
         resourceRepository.save(resource);
         return rubricMapper.toDtoList(rubrics);
-//        rubricService.saveAll(rubricMapper.toDtoList(rubrics));
     }
+
 }

@@ -3,10 +3,9 @@ package com.alexey.skoblin.test_task_irbis.output.parser;
 import com.alexey.skoblin.test_task_irbis.dto.NewsDto;
 import com.alexey.skoblin.test_task_irbis.dto.ResourceDto;
 import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
-import com.alexey.skoblin.test_task_irbis.mapper.ResourceMapper;
+import com.alexey.skoblin.test_task_irbis.service.NewsService;
 import com.alexey.skoblin.test_task_irbis.service.ResourceService;
 import com.alexey.skoblin.test_task_irbis.service.RubricService;
-import com.alexey.skoblin.test_task_irbis.time.DateTimeParser;
 import com.alexey.skoblin.test_task_irbis.time.RiaDateTimeParser;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,17 +30,17 @@ public class RiaRuParser {
 
     private static final String NAME = "РИА";
 
-    private final ResourceService resourceService;
-    private final RubricService rubricService;
+    private ResourceService resourceService;
+    private RubricService rubricService;
 
-    private final RiaDateTimeParser dateTimeParser;
-    private final ResourceMapper resourceMapper;
+    private RiaDateTimeParser dateTimeParser;
+    private NewsService newsService;
 
     public void parse() {
         ResourceDto resource = resourceService.findByName(NAME);
         try {
             log.atInfo().log("Parsing {} started", NAME);
-            Document doc = Jsoup.connect(resource.getUrl()).get();
+            Document doc = Jsoup.connect(resource.url()).get();
 
             Elements rubricItems = doc.select(".m-with-title");
             List<RubricDto> rubrics = new ArrayList<>();
@@ -51,7 +50,7 @@ public class RiaRuParser {
                     String name = link.text();
                     String url = link.attr("href");
                     Optional<UUID> uuid = rubricService
-                            .findByNameAndResourceId(name, resource.getId());
+                            .findIdByUrlAndResourceId(resource.id(), name);
                     RubricDto rubric = RubricDto.builder()
                             .id(uuid.orElse(null))
                             .name(name)
@@ -64,7 +63,7 @@ public class RiaRuParser {
 
             rubrics.forEach(rubric -> {
                 try {
-                    Document rubricDoc = Jsoup.connect(resource.getUrl() + rubric.getUrl()).get();
+                    Document rubricDoc = Jsoup.connect(resource.url() + rubric.url()).get();
                     List<Element> newsItems = rubricDoc.select(".list-item");
                     List<NewsDto> news = new ArrayList<>();
                     for (Element item : newsItems) {
@@ -87,16 +86,18 @@ public class RiaRuParser {
                             log.atWarn().log("Error parsing dateTime for news: " + eNewsDateTime);
                             continue;
                         }
-                        news.add(NewsDto.builder()
+                        Optional<UUID> uuid = newsService.findByUrl(url);
+                        NewsDto newsDto = NewsDto.builder()
+                                .id(uuid.orElse(null))
                                 .title(title)
                                 .url(url)
                                 .dateTime(dateTime)
-                                .build()
-                        );
+                                .build();
+                        news.add(newsDto);
                     }
                     news = rubricService.saveAllNewsWithRubric(rubric, news);
                 } catch (IOException eNews) {
-                    log.atWarn().log("Parsing news for rubric: {} in resource: {} HttpStatusException: {}", NAME, rubric.getName(), eNews.getMessage());
+                    log.atWarn().log("Parsing news for rubric: {} in resource: {} HttpStatusException: {}", NAME, rubric.name(), eNews.getMessage());
                 }
             });
         } catch (IOException e) {

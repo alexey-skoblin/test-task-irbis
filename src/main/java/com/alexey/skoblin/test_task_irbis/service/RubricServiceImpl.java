@@ -1,15 +1,11 @@
 package com.alexey.skoblin.test_task_irbis.service;
 
 import com.alexey.skoblin.test_task_irbis.dto.NewsDto;
-import com.alexey.skoblin.test_task_irbis.dto.ResourceDto;
 import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
 import com.alexey.skoblin.test_task_irbis.entity.News;
-import com.alexey.skoblin.test_task_irbis.entity.Resource;
 import com.alexey.skoblin.test_task_irbis.entity.Rubric;
 import com.alexey.skoblin.test_task_irbis.exception.EntityNotFoundByIdException;
-import com.alexey.skoblin.test_task_irbis.mapper.BaseMapper;
 import com.alexey.skoblin.test_task_irbis.mapper.NewsMapper;
-import com.alexey.skoblin.test_task_irbis.mapper.ResourceMapper;
 import com.alexey.skoblin.test_task_irbis.mapper.RubricMapper;
 import com.alexey.skoblin.test_task_irbis.repository.RubricRepository;
 import java.util.List;
@@ -24,10 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 @AllArgsConstructor
 public class RubricServiceImpl implements RubricService {
 
-    RubricMapper rubricMapper;
-    RubricRepository rubricRepository;
+    private RubricMapper rubricMapper;
+    private RubricRepository rubricRepository;
     private NewsMapper newsMapper;
-    private NewsService newsService;
 
     @Override
     public List<RubricDto> findAll() {
@@ -52,8 +47,8 @@ public class RubricServiceImpl implements RubricService {
     public RubricDto update(UUID uuid, RubricDto dto) {
         Rubric rubric = rubricRepository.findById(uuid)
             .orElseThrow(() -> new EntityNotFoundByIdException(Rubric.class, uuid.toString()));
-        rubric.setName(dto.getName());
-        rubric.setUrl(dto.getUrl());
+        rubric.setName(dto.name());
+        rubric.setUrl(dto.url());
         rubric = rubricRepository.save(rubric);
         return rubricMapper.toDto(rubric);
     }
@@ -73,9 +68,8 @@ public class RubricServiceImpl implements RubricService {
     }
 
     @Override
-    public Optional<UUID> findByNameAndResourceId(String name, UUID resourceId) {
-        Rubric rubric = rubricRepository.findByNameAndResource_Id(name, resourceId);
-        return rubric != null ? Optional.of(rubric.getId()) : Optional.empty();
+    public Optional<UUID> findIdByUrlAndResourceId(UUID resourceId, String name) {
+        return rubricRepository.findIdByUrlAndResourceId(name, resourceId);
     }
 
     @Override

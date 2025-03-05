@@ -22,11 +22,11 @@ import org.springframework.context.annotation.Bean;
 public interface ResourceMapper extends BaseMapper<ResourceDto, Resource> {
 
     @Override
-    @Mapping(target = "rubrics", qualifiedByName = "toSlimRubric")
+    @Mapping(target = "rubrics", qualifiedByName = "toSlimRubric", defaultExpression = "java(new java.util.ArrayList<>())")
     Resource toEntity(ResourceDto dto);
 
     @Override
-    @Mapping(target = "rubrics", qualifiedByName = "toSlimRubricDto")
+    @Mapping(target = "rubrics", qualifiedByName = "toSlimRubricDto", defaultExpression = "java(new java.util.ArrayList<>())")
     ResourceDto toDto(Resource entity);
 
 }

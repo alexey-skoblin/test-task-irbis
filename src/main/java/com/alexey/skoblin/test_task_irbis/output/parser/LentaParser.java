@@ -1,20 +1,17 @@
 package com.alexey.skoblin.test_task_irbis.output.parser;
 
-import com.alexey.skoblin.test_task_irbis.dto.NewsDto;
 import com.alexey.skoblin.test_task_irbis.dto.ResourceDto;
-import com.alexey.skoblin.test_task_irbis.dto.RubricDto;
+import com.alexey.skoblin.test_task_irbis.entity.News;
+import com.alexey.skoblin.test_task_irbis.entity.Resource;
+import com.alexey.skoblin.test_task_irbis.entity.Rubric;
 import com.alexey.skoblin.test_task_irbis.mapper.ResourceMapper;
-import com.alexey.skoblin.test_task_irbis.service.ResourceService;
-import com.alexey.skoblin.test_task_irbis.service.RubricService;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.alexey.skoblin.test_task_irbis.time.DateTimeParser;
 import lombok.AllArgsConstructor;
@@ -22,95 +19,117 @@ import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor
 @Slf4j
 public class LentaParser {
-
-    private static final String NAME = "Лента";
-
-    private final ResourceService resourceService;
-    private final RubricService rubricService;
+    private static final String RUBRIC_ITEM_SELECTOR = ".menu__nav-list > li.menu__nav-item:has(a.menu__nav-link._is-extra)";
+    private static final String RUBRIC_LINK_SELECTOR = "a.menu__nav-link";
+    private static final String NEWS_CARD_SELECTOR = "[class*='card-']";
+    private static final Pattern NEWS_CARD_PATTERN = Pattern.compile("^card-[^_]+($| .*$)");
 
     private final DateTimeParser dateTimeParser;
-    private final ResourceMapper resourceMapper;
+    private ResourceMapper resourceMapper;
 
-    public void parse() {
-        ResourceDto resource = resourceService.findByName(NAME);
+    public ResourceDto parse(ResourceDto resourceDto) {
         try {
-            log.atInfo().log("Parsing {} started", NAME);
-            Document doc = Jsoup.connect(resource.getUrl()).get();
-
-            Elements rubricItems = doc.select(".menu__nav-list > li.menu__nav-item:has(a.menu__nav-link._is-extra)");
-            List<RubricDto> rubrics = new ArrayList<>();
-            for (Element item : rubricItems) {
-                Element link = item.selectFirst("a.menu__nav-link");
-                if (link != null) {
-                    String name = link.text();
-                    String url = link.attr("href");
-                    Optional<UUID> uuid = rubricService
-                            .findByNameAndResourceId(name, resource.getId());
-                    RubricDto rubric = RubricDto.builder()
-                            .id(uuid.orElse(null))
-                            .name(name)
-                            .url(url)
-                            .build();
-                    rubrics.add(rubric);
-                }
-            }
-            rubrics = resourceService.saveAllRubricWithResource(rubrics, resource);
-
-            rubrics.forEach(rubric -> {
-                try {
-                    Document rubricDoc = Jsoup.connect(resource.getUrl() + rubric.getUrl()).get();
-                    List<Element> newsItems = getNewsItems(rubricDoc);
-                    List<NewsDto> news = new ArrayList<>();
-                    for (Element item : newsItems) {
-                        Element titleElement = item.selectFirst("[class*='title']");
-                        if (titleElement == null) {
-                            continue;
-                        }
-                        String title = titleElement.text();
-                        String url = item.attr("href");
-                        Element timeElement = item.selectFirst("time");
-                        String timeString = timeElement != null ? timeElement.text() : "";
-                        LocalDateTime dateTime;
-                        try {
-                            dateTime = dateTimeParser.parse(url, timeString);
-                        } catch (DateTimeParseException eNewsDateTime) {
-                            log.atWarn().log("Error parsing dateTime for news: " + eNewsDateTime);
-                            continue;
-                        }
-                        news.add(NewsDto.builder()
-                                .title(title)
-                                .url(url)
-                                .dateTime(dateTime)
-                                .build()
-                        );
-                    }
-                    news = rubricService.saveAllNewsWithRubric(rubric, news);
-                } catch (IOException eNews) {
-                    log.atWarn().log("Parsing news for rubric: {} in resource: {} HttpStatusException: {}", NAME, rubric.getName(), eNews.getMessage());
-                }
-            });
+            log.atInfo().log("Parsing {} started", resourceDto.name());
+            Document mainPageDoc = Jsoup.connect(resourceDto.url()).get();
+            Resource resultResource = resourceMapper.toEntity(resourceDto);
+            resultResource.setRubrics(parseRubrics(resultResource, mainPageDoc));
+            resultResource.getRubrics().forEach(rubric -> {
+                        rubric.setNews(parseNews(rubric, resourceDto.url()));
+                    });
+            return resourceMapper.toDto(resultResource);
         } catch (IOException e) {
-            log.atWarn().log("Parsing resource {} IOException: {}", NAME, e.getMessage());
+            log.atWarn().log("Parsing resourceDto {} IOException: {}", resourceDto.name(), e.getMessage());
         }
-        log.atInfo().log("Parsing {} ended", NAME);
+
+        log.atInfo().log("Parsing {} ended", resourceDto.name());
+        return resourceDto;
     }
 
-    /**
-     * Получает список новостей рубрики
-     */
-    private List<Element> getNewsItems(Document rubricDoc) {
-        //Текущая реализация - достает все существующие card- верхнего уровня
-        return rubricDoc.select("[class*='card-']").stream()
-                .filter(x -> Pattern.matches("^card-[^_]+($| .*$)", x.attr("class")))
-                .toList();
+    private List<Rubric> parseRubrics(Resource resource, Document document) {
+        return document.select(RUBRIC_ITEM_SELECTOR).stream()
+                .map(LentaParser::parseRubricCard)
+                .filter(Objects::nonNull)
+//                .peek(rubric -> rubric.setResource(resource))
+                .collect(Collectors.toList());
     }
 
+    private static Rubric parseRubricCard(Element item) {
+        try {
+            Element link = item.selectFirst(RUBRIC_LINK_SELECTOR);
+            if (link == null) {
+                return null;
+            }
+            String url = link.attr("href");
+            if (url.isEmpty()) {
+                return null;
+            }
+            return Rubric.builder()
+                    .name(link.text())
+                    .url(url)
+                    .build();
+        } catch (Exception e) {
+            log.warn("Error parsing rubric card: {}", e.getMessage());
+            return null;
+        }
+    }
 
+    private List<News> parseNews(Rubric rubric, String baseUrl) {
+        try {
+            Document rubricDoc = Jsoup.connect(baseUrl + rubric.getUrl()).get();
+            return rubricDoc.select(NEWS_CARD_SELECTOR).stream()
+                    .filter(this::isValidNewsCard)
+                    .map(this::parseNewsCard)
+                    .filter(Objects::nonNull)
+//                    .peek(news -> news.setRubric(rubric))
+                    .collect(Collectors.toList());
+        } catch (IOException e) {
+            log.atWarn().log("Error parsing rubric: {}, error: {}", rubric.getName(), e.getMessage());
+        }
+        return new ArrayList<>();
+    }
+
+    private boolean isValidNewsCard(Element card) {
+        //Проверка на карточку верхнего уровня
+        return NEWS_CARD_PATTERN.matcher(card.attr("class")).matches();
+    }
+
+    private News parseNewsCard(Element card) {
+        try {
+            Element titleElement = card.selectFirst("[class*='title']");
+            if (titleElement == null) {
+                return null;
+            }
+            Element timeElement = card.selectFirst("time");
+            if (timeElement == null) {
+                return null;
+            }
+            String title = titleElement.text();
+            String relativeUrl = card.attr("href");
+
+            LocalDateTime date = parseNewsDate(timeElement, relativeUrl);
+            return News.builder()
+                    .title(title)
+                    .url(relativeUrl)
+                    .dateTime(date)
+                    .build();
+        } catch (Exception e) {
+            log.warn("Error parsing news card: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private LocalDateTime parseNewsDate(Element timeElement, String url) {
+        try {
+            return dateTimeParser.parse(url, timeElement.text());
+        } catch (DateTimeParseException e) {
+            log.warn("Error parsing date for news: {}", url);
+            return null;
+        }
+    }
 }

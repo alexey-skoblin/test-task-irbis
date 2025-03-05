@@ -11,4 +11,5 @@ public interface ResourceService extends CrudService<ResourceDto, UUID> {
     ResourceDto findByName(String name);
 
     List<RubricDto> saveAllRubricWithResource(List<RubricDto> dtos, ResourceDto resourceDto);
+
 }

@@ -3,7 +3,9 @@ package com.alexey.skoblin.test_task_irbis.time;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.util.Locale;
 import java.util.Objects;
 import org.springframework.stereotype.Component;
@@ -35,12 +37,14 @@ public class RiaDateTimeParser {
         }
         if (timeString.startsWith("Вчера, ")){
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-            LocalTime localTime = LocalTime.parse(timeString.substring(8), formatter);
+            LocalTime localTime = LocalTime.parse(timeString.substring(7), formatter);
             return localTime.atDate(LocalDateTime.now().toLocalDate().minusDays(1));
         }
         Locale locale = new Locale("ru");
-        DateTimeFormatter formatter = DateTimeFormatter
-                .ofPattern("d MMMM, HH:mm", locale);
+        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                .appendPattern("d MMMM, HH:mm")
+                .parseDefaulting(ChronoField.YEAR, 2024)
+                .toFormatter(locale);
         return LocalDateTime.parse(timeString, formatter);
     }
 }

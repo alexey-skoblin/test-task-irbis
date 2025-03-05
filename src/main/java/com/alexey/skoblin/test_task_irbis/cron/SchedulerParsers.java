@@ -10,15 +10,14 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class SchedulerParsers {
 
-    private LentaParser lentaParser;
-
     private RiaRuParser riaRuParser;
 
     @Scheduled(fixedDelay = 100000)
     private void LentaRuParsesing() throws InterruptedException {
         //TODO: ПОВТОРЯЕМОСТЬ ЭЛЕМЕНТОВ ПАРСИНГА ПЕРЕПРОВЕРИТЬ
-        lentaParser.parse();
-        riaRuParser.parse();
+
+
+//        riaRuParser.parse();
     }
 
 }

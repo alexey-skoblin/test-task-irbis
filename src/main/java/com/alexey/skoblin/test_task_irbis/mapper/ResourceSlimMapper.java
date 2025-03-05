@@ -10,11 +10,11 @@ import org.mapstruct.*;
 public interface ResourceSlimMapper {
 
     @Named("toSlimResource")
-    @Mapping(target = "rubrics", ignore = true)
+    @Mapping(target = "rubrics", ignore = true, defaultExpression = "java(new java.util.ArrayList<>())")
     Resource toSlimEntity(ResourceDto dto);
 
     @Named("toSlimResourceDto")
-    @Mapping(target = "rubrics", ignore = true)
+    @Mapping(target = "rubrics", ignore = true, defaultExpression = "java(new java.util.ArrayList<>())")
     ResourceDto toSlimDto(Resource entity);
 
 }

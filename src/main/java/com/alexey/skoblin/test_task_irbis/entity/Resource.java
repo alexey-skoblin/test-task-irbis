@@ -38,10 +38,12 @@ public class Resource {
     @Column(nullable = false, unique = true)
     private String name;
 
+    @Column(nullable = false, unique = true)
     private String url;
 
+    @Builder.Default
     @OneToMany(mappedBy = "resource", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Rubric> rubrics = new HashSet<>();
+    private List<Rubric> rubrics = new ArrayList<>();
 
     @CreatedDate
     private LocalDateTime createdAt;
